@@ -1,5 +1,6 @@
 import os
 import sys
+import msvcrt
 import time
 from tabulate import tabulate
 from colorama import Fore, Back, Style, init
@@ -37,8 +38,12 @@ def leerDiccionario (diccionario, mensaje):
 #función lee un solo carácter NO espera ENTER #
 ###############################################
 def LeerCaracter (mensaje):
-  print(mensaje, end="", flush=True)
-  return msvcrt.getch().lower().decode('utf-8')  #getch captura un solo caracter No hay que dar enter
+  return input(mensaje).strip().lower()
+  #print(mensaje, end="", flush=True)
+  #tecla = msvcrt.getch().decode('utf-8').lower()  # Captura la tecla presionada
+  #print(tecla)  # Imprime la tecla en la consola para que el usuario la vea
+  #return tecla
+  #return msvcrt.getch().lower().decode('utf-8')  #getch captura un solo caracter No hay que dar enter
 
 ##############################################################################################
 # Función que valida el ingreso de una cadena que no sea vacia y limitar un maximo caracteres#

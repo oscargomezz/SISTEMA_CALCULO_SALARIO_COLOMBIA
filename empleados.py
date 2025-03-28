@@ -1,5 +1,6 @@
 import libreria
 import os
+import sys
 from tabulate import tabulate
 from colorama import Fore, Back, Style, init
 init()
@@ -117,8 +118,9 @@ def menu():
                 libreria.mensajeEsperaEnter( mensaje )
             case '3':           
                 mensaje = " SIN INFORMACIÓN PARA CONSULTAR "
-                if (empleados):            
-                    codigoBuscar = input("CÓDIGO: ").strip().upper()
+                if (empleados):
+                    #sys.stdout.flush()            
+                    codigoBuscar = input("\n INGRESE EL CÓDIGO A CONSULTAR: ").strip().upper()
                     posicion = libreria.buscar(empleados, codigoBuscar)
                     mensaje = "\u26A0 NO EXISTE EL REGISTRO " + codigoBuscar
                     if (posicion >= 0):
@@ -159,7 +161,7 @@ def menu():
                 libreria.mensajeEsperaSegundos( "GRACIAS POR UTILIZAR NUESTRO PROGRAMA, HASTA PRONTO! 😎", 1 )
                 break
             case _:
-                libreria.mensajeEsperaSegundos( "OPCION NO VALIDA", 1 )
+                libreria.mensajeEsperaSegundos( "OPCION NO VALIDA, POR FAVOR, INTENTE NUEVAMENTE", 3 )
                 libreria.limpiarPantalla()
 
 if __name__ == "__main__":
