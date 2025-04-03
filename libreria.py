@@ -1,10 +1,9 @@
 import os
 import sys
-import msvcrt
 import time
+import re
 from tabulate import tabulate
 from colorama import Fore, Back, Style, init
-import re
 import pickle
 from datetime import datetime
 
@@ -14,8 +13,25 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 init()
 
-import time 
 import msvcrt
+
+
+#valida que un codigo se encuentre en un diccionario
+def leerCodigoValidado (lista, mensaje):
+      while True:
+          print(f"{mensaje}", end="", flush=True)
+          codigoBuscar = input().upper()
+          encontrado = buscar(lista, codigoBuscar)
+          if encontrado >= 0:
+            return codigoBuscar, encontrado
+          else:
+            print(Fore.YELLOW + Style.BRIGHT + "❌ Error: Código NO existe" + Style.RESET_ALL)
+            #print("Error: Código NO existe", end="", flush=True)
+            time.sleep(3) # Pausa breve de 1 segundo
+            # Borrar las dos líneas anteriores (entrada + mensaje de error)
+            sys.stdout.write("\033[F\033[K")  # Borra última línea (Error)
+            sys.stdout.write("\033[F\033[K")  # Borra la línea de entrada
+            sys.stdout.flush()
 
 #-------------------------------------------------------------------#
 #recibe un diccionario lo muestra y validad la opcion del usuario   #
@@ -154,6 +170,7 @@ def  leerFlotante (mensaje, minimo, maximo):
       time.sleep(1)                 # Pausa breve de 1 segundo
       print("\r\033[K", end="")     # Mueve cursor al inicio de la línea y limpia la línea
       print("\033[F\033[K", end="") # Mueve cursor al final de la línea de arriba y limpia la línea
+      
 
 #La función devuelve el nombre del sistema operativo y aplica el comando respectivo
 def limpiarPantalla ():    
@@ -186,7 +203,7 @@ def mensajeEsperaEnter( mensaje ):
 #-----------------------------------------------------------#
 def menuCrud( titulo ): 
     limpiarPantalla()    #os.system('cls')
-    print(tabulate([['' + Fore.GREEN + "ALMACÉN MARKET \n" + Style.RESET_ALL + '' + Fore.LIGHTYELLOW_EX + "MENU: " + titulo + '' + Style.RESET_ALL + ''],],
+    print(tabulate([['' + Fore.GREEN + "SISTEMA CALCULO SALARIO COLOMBIA \n" + Style.RESET_ALL + '' + Fore.LIGHTYELLOW_EX + "MENU: " + titulo + '' + Style.RESET_ALL + ''],],
                      tablefmt='fancy_grid',
                      stralign='center'))
     print(tabulate([ 
@@ -217,11 +234,26 @@ def listar(encabezado, listas):
 #-------------------------------------------------------------------------------------#
 # Función Mostrar un solo registro, con la cabecera y los datos de la entidad enviada #
 #-------------------------------------------------------------------------------------#
-def mostrar(encabezado, lista): 
-    os.system('cls')
+def mostrar(encabezado, listas): 
+    #os.system('cls')
     # Formatear columnas de numeros que no salga exponencial
-    lista = [lista]   #CONVERTIMOS A LISTA DE LISTAS POR QUE TABULATE LO EXIGE
-    headers = encabezado; #dependiendo de la entidad, se envian por parametro
+    lista = [listas]   #CONVERTIMOS A LISTA DE LISTAS POR QUE TABULATE LO EXIGE
+    headers = encabezado #dependiendo de la entidad, se envian por parametro
+    print(tabulate(lista,
+                   headers = headers,
+                   tablefmt='fancy_grid',
+                   stralign='left',
+                   floatfmt=",.0f"))
+
+#-------------------------------------------------------------------------------------#
+# Función Mostrar un solo registro, con la cabecera y los datos de la entidad enviada #
+#-------------------------------------------------------------------------------------#
+def mostrarEmpleado(encabezadoEmpleados, listas): 
+    #os.system('cls')
+    # Formatear columnas de numeros que no salga exponencial
+    #lista = [listas]   #CONVERTIMOS A LISTA DE LISTAS POR QUE TABULATE LO EXIGE
+    lista = listas if isinstance(listas[0], list) else [listas]
+    headers = encabezadoEmpleados #dependiendo de la entidad, se envian por parametro
     print(tabulate(lista,
                    headers = headers,
                    tablefmt='fancy_grid',
@@ -239,6 +271,7 @@ def buscar(lista, codigoBuscar):
         if str(registro[0]).upper() == str(codigoBuscar).upper():
             return indice
     return posicion
+
 
 #---------------------------------------------------------#
 # Función para guardar Información en Archivos - MODO  w, # 
@@ -267,6 +300,7 @@ def cargar(lista, filename):
         time.sleep(1)
     return lista
 
+
 #GENERA Y ABRE LOS PDF GENERADOS
 
 
@@ -287,7 +321,7 @@ def abrirPDF( archivo_pdf):
 
 
 # Función para generar PDF con logo y tabla ajustada
-def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf):
+def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf, titulo, logo_empleados, logo_pagos):
 
     # Márgenes y ajuste extra para margen visual
     margen = 28
@@ -302,12 +336,13 @@ def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf):
     elementos = []
 
     # Agregar logo alineado a la izquierda
-    logo_path = "imagenes/logo.jpg"  # Asegúrate de que este archivo está en la misma carpeta
+    #logo_path = "imagenes/logo.png"  # Asegúrate de que este archivo está en la misma carpeta
     #logo = Image(logo_path, width=1.5 * inch, height=1 * inch)  # Tamaño ajustado del logo
     #elementos.append(logo)
     try:
-        img = Image(logo_path, width=1.5 * inch, height=0.75 * inch)  # Ajusta el tamaño del logo
-        img.hAlign = 'RIGHT'  # Alinea a la derecha
+        img = Image(logo_pagos, width=2.3 * inch, height=1.75 * inch)  # Ajusta el tamaño del logo
+        img = Image(logo_empleados, width=2.3 * inch, height=1.75 * inch)  # Ajusta el tamaño del logo
+        img.hAlign = 'CENTER'  # Centrado
         elementos.append(img)
     except:
         print("⚠️ No se encontró el logo, el PDF se generará sin él.")
@@ -316,13 +351,13 @@ def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf):
     elementos.append(Spacer(1, 10))
 
     # Título centrado con espacio arriba
-    titulo = [["LISTADO DE empleados"]]
+    #titulo = [["LISTADO DE EMPLEADOS"]]
     tabla_titulo = Table(titulo, colWidths=[ancho_util])
     tabla_titulo.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 16),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 16),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
     ]))
     elementos.append(tabla_titulo)
 
@@ -343,8 +378,8 @@ def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf):
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
@@ -361,3 +396,36 @@ def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf):
 
 
 
+############################################################################
+#FUNCIONES CALCULO SALARIO
+############################################################################
+
+# Funcion para calcular el salario devengado
+def Calcular_salario_devengado(Salario_basico, Dias_trabajados):
+    Salario_devengado = (Salario_basico / 30) * Dias_trabajados
+    return Salario_devengado
+
+# Funcion para aplicar el auxilio de transporte
+def Aplicar_auxilio_transporte(Salario_basico, SALARIO_MINIMO, VALOR_AUXILIO_TRANSPORTE, Dias_trabajados):
+    if Salario_basico <= (SALARIO_MINIMO * 2):
+        Auxilio_transporte = (VALOR_AUXILIO_TRANSPORTE / 30) * Dias_trabajados
+        return Auxilio_transporte
+    else:
+        return 0
+    
+# Funcion para calcular el descuento por salud
+def Calcular_descuento_salud(Salario_devengado, PORCENTAJE_SALUD):
+    Descuento_salud = Salario_devengado * PORCENTAJE_SALUD
+    return Descuento_salud
+
+# Funcion para calcular el descuento por pension
+def Calcular_descuento_pension(Salario_devengado, PORCENTAJE_PENSION):
+    Descuento_pension = Salario_devengado * PORCENTAJE_PENSION
+    return Descuento_pension
+
+# Funcion para calcular el salario neto del empleado
+def Calcular_salario_neto(Salario_devengado, Auxilio_transporte, Descuento_salud, Descuento_pension):
+    Salario_neto = Salario_devengado + Auxilio_transporte - Descuento_salud - Descuento_pension
+    return Salario_neto
+
+############################################################################
