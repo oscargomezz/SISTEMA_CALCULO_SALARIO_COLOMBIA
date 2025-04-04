@@ -1,6 +1,7 @@
 import libreria
 import os
 import sys
+import re
 from tabulate import tabulate
 from colorama import Fore, Back, Style, init
 init()
@@ -37,7 +38,7 @@ def actualizar ( encabezado, empleado ):
     while True:                
         print("*** ACTUALIZANDO DATOS DEL EMPLEADO ***")
         print("*" * 30)    
-        libreria.mostrarEmpleado(encabezado, empleado)
+        libreria.mostrar(encabezado, empleado)
         menuActualizar()
         respuesta = libreria.LeerCaracter("OPCION: ")
         match respuesta:
@@ -101,6 +102,8 @@ empleados   = []  #Lista de Listas, muchos empleados
 encabezado = [Fore.GREEN + Style.BRIGHT + "ID", "Cédula", "Nombres", "Nacimiento", "Dirección", "Telefonos", "Mail", "Activo" , "Salario" + Style.RESET_ALL]
 anchoColumnas = [60, 70, 90, 70, 90, 90, 90, 35, 90]
 
+encabezado = [re.sub(r'\x1b\[[0-9;]*m', '', col) for col in encabezado]
+
 empleados = libreria.cargar(empleados, nombreArchivo)
 
 
@@ -128,9 +131,8 @@ def menu():
                     respuesta = libreria.LeerCaracter("Imprimir PDF (S / N): ").upper()
                     if respuesta == 'S':
                         titulo = [["EMPLEADOS"]]
-                        logo_pagos = "imagenes/logo pagos.png"
-                        logo_empleados = "imagenes/logo empleados.png"                        
-                        libreria.generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf, titulo, logo_empleados, logo_pagos)
+                        logo = "imagenes/logo empleados.png"                        
+                        libreria.generarPDF (encabezado, empleados, archivo_pdf, titulo, logo)
                         libreria.abrirPDF (archivo_pdf)
                     mensaje = "\U00002705 FIN DE LISTAR <ENTER> Continuar"
                 libreria.mensajeEsperaEnter( mensaje )
@@ -143,7 +145,7 @@ def menu():
                     mensaje = "\u26A0 NO EXISTE EL REGISTRO " + codigoBuscar
                     if (posicion >= 0):
                         empleado = empleados[posicion]
-                        libreria.mostrarEmpleado(encabezado, empleado)
+                        libreria.mostrar(encabezado, empleado)
                         mensaje = "\U00002705 FIN DE CONSULTAR <ENTER> Continuar"            
                 libreria.mensajeEsperaEnter( mensaje )
             case '4':          
@@ -167,7 +169,7 @@ def menu():
                     mensaje = "\u26A0 NO EXISTE EL REGISTRO " + codigoBuscar
                     if (posicion >= 0):
                         empleado = empleados[posicion]
-                        libreria.mostrarEmpleado(encabezado, empleado)
+                        libreria.mostrar(encabezado, empleado)
                         mensaje = "\U00002705 NO ELIMINADO - FIN DE ELIMINAR <ENTER> Continuar"                     
                         respuesta = libreria.LeerCaracter("Seguro de Eliminar (Sí - No): ")
                         if (respuesta.lower() == 's'):

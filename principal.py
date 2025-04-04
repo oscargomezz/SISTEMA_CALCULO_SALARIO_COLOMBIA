@@ -23,7 +23,7 @@ def menu(  ):
     print(tabulate([ 
                      ['*' * (len(titulo) + 6)],
                      ["\t" + Back.YELLOW + "[1]" + Style.RESET_ALL + "  GESTIONAR EMPLEADOS  "],
-                     ["\t" + Back.YELLOW + "[2]" + Style.RESET_ALL + "  GESTIONAR PAGOS    "],
+                     ["\t" + Back.YELLOW + "[2]" + Style.RESET_ALL + "  GESTIONAR PAGOS NOMINA   "],
                      ["\t" + Back.YELLOW + "[3]" + Style.RESET_ALL + "  REPORTES "],
                      ["\t" + Back.YELLOW + "[4]" + Style.RESET_ALL + "  GESTIONAR PARAMETROS  "],
                      ["\t" + Back.YELLOW + "[5]" + Style.RESET_ALL + "  SALIR     "]

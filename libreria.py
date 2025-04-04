@@ -171,6 +171,37 @@ def  leerFlotante (mensaje, minimo, maximo):
       print("\r\033[K", end="")     # Mueve cursor al inicio de la línea y limpia la línea
       print("\033[F\033[K", end="") # Mueve cursor al final de la línea de arriba y limpia la línea
       
+    
+############################################################################
+# Función que valida el nombre de un mes ingresado #
+############################################################################      
+def leerMes(mensaje="Ingrese un mes"):
+    meses_validos = {
+        "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+        "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+    }
+
+    while True:
+        print(f"{mensaje}: ", end="", flush=True)
+        valor = input().strip().upper()
+
+        # Verificar que no esté vacío ni tenga espacios intermedios
+        if not valor or " " in valor:
+            print("❌ Error: El mes no debe estar vacío ni contener espacios.", end="", flush=True)
+            time.sleep(2)
+            print("\r\033[K", end="")
+            print("\033[F\033[K", end="")
+            continue
+
+        # Verificar si el mes ingresado es válido
+        if valor in meses_validos:
+            return valor
+        else:
+            print("❌ Error: Mes inválido. Inténtelo de nuevo.", end="", flush=True)
+            time.sleep(2)
+            print("\r\033[K", end="")
+            print("\033[F\033[K", end="")      
+      
 
 #La función devuelve el nombre del sistema operativo y aplica el comando respectivo
 def limpiarPantalla ():    
@@ -224,6 +255,11 @@ def menuCrud( titulo ):
 def listar(encabezado, listas): 
     # Formatear columnas de numeros que no salga exponencial
     limpiarPantalla()
+    
+    encabezado_coloreado = [f"{Fore.GREEN}{Style.BRIGHT}{col}{Style.RESET_ALL}" for col in encabezado]
+    
+    print(tabulate(listas, headers=encabezado_coloreado, tablefmt='fancy_grid', stralign='left', floatfmt=",.0f"))
+'''   
     headers = encabezado
     #headers =[Fore.GREEN + 'PLACA', 'MARCA', 'MODELO', 'COLOR', 'PRECIO' ]
     print(tabulate(listas,
@@ -231,6 +267,7 @@ def listar(encabezado, listas):
                    tablefmt='fancy_grid',
                    stralign='left',
                    floatfmt=",.0f"))
+'''                   
 #-------------------------------------------------------------------------------------#
 # Función Mostrar un solo registro, con la cabecera y los datos de la entidad enviada #
 #-------------------------------------------------------------------------------------#
@@ -238,12 +275,19 @@ def mostrar(encabezado, listas):
     #os.system('cls')
     # Formatear columnas de numeros que no salga exponencial
     lista = [listas]   #CONVERTIMOS A LISTA DE LISTAS POR QUE TABULATE LO EXIGE
+    
+    # Imprimir encabezado en color sin modificar los datos internos
+    encabezado_coloreado = [f"{Fore.GREEN}{Style.BRIGHT}{col}{Style.RESET_ALL}" for col in encabezado]
+    
+    print(tabulate(lista, headers=encabezado_coloreado, tablefmt='fancy_grid', stralign='left', floatfmt=",.0f"))
+'''  
     headers = encabezado #dependiendo de la entidad, se envian por parametro
     print(tabulate(lista,
                    headers = headers,
                    tablefmt='fancy_grid',
                    stralign='left',
                    floatfmt=",.0f"))
+'''                   
 
 #-------------------------------------------------------------------------------------#
 # Función Mostrar un solo registro, con la cabecera y los datos de la entidad enviada #
@@ -321,78 +365,133 @@ def abrirPDF( archivo_pdf):
 
 
 # Función para generar PDF con logo y tabla ajustada
-def generarPDF (encabezado, empleados, anchoColumnas, archivo_pdf, titulo, logo_empleados, logo_pagos):
-
-    # Márgenes y ajuste extra para margen visual
-    margen = 28
-    extra_margen_visual = 10  # Espacio extra visual
+def generarPDF(encabezado, empleados, archivo_pdf, titulo, logo):
+    # Configuración de márgenes amplios
+    margen = 40
+    extra_margen_visual = 15
     ancho_total = 792  
     ancho_util = (ancho_total - (2 * margen)) - (2 * extra_margen_visual)
 
     doc = SimpleDocTemplate(archivo_pdf, pagesize=landscape(letter),
-                            leftMargin=margen, rightMargin=margen,
-                            topMargin=margen, bottomMargin=margen)
+                          leftMargin=margen, rightMargin=margen,
+                          topMargin=margen, bottomMargin=margen)
 
     elementos = []
 
-    # Agregar logo alineado a la izquierda
-    #logo_path = "imagenes/logo.png"  # Asegúrate de que este archivo está en la misma carpeta
-    #logo = Image(logo_path, width=1.5 * inch, height=1 * inch)  # Tamaño ajustado del logo
-    #elementos.append(logo)
+    # Función para calcular el ancho necesario para cada columna
+    def calcular_ancho_columnas(datos):
+        # Anchos mínimos y máximos (en puntos)
+        min_width = 40  # Ancho mínimo para cualquier columna
+        max_width = 200  # Ancho máximo para cualquier columna
+        
+        # Inicializar anchos con el ancho de los encabezados
+        anchos = [min_width] * len(datos[0])
+        
+        # Fuente para cálculos
+        normal_font = 'Helvetica'
+        bold_font = 'Helvetica-Bold'
+        font_size = 9
+        
+        for col in range(len(datos[0])):
+            max_text_width = 0
+            
+            for row in range(len(datos)):
+                # Determinar si es encabezado (usamos fuente bold)
+                font = bold_font if row == 0 else normal_font
+                
+                # Calcular ancho aproximado del texto
+                text = str(datos[row][col])
+                text_width = len(text) * font_size * 0.6  # Factor de ajuste empírico
+                
+                # Ajustar por fuente bold
+                if row == 0:
+                    text_width *= 1.15
+                
+                # Considerar saltos de línea
+                line_count = text.count('\n') + 1
+                if line_count > 1:
+                    text_width = text_width / line_count * 1.5
+                
+                if text_width > max_text_width:
+                    max_text_width = text_width
+            
+            # Ajustar el ancho calculado con límites
+            anchos[col] = min(max(min_width, max_text_width + 20), max_width)  # +20 por padding
+        
+        # Normalizar los anchos para que sumen el ancho útil
+        suma_actual = sum(anchos)
+        factor_ajuste = ancho_util / suma_actual if suma_actual > 0 else 1
+        anchos = [w * factor_ajuste for w in anchos]
+        
+        return anchos
+
+    # Agregar logos
     try:
-        img = Image(logo_pagos, width=2.3 * inch, height=1.75 * inch)  # Ajusta el tamaño del logo
-        img = Image(logo_empleados, width=2.3 * inch, height=1.75 * inch)  # Ajusta el tamaño del logo
-        img.hAlign = 'CENTER'  # Centrado
-        elementos.append(img)
+        # Logo de empleados
+        img_logo = Image(logo, width=2.3*inch, height=1.75*inch)
+        img_logo.hAlign = 'CENTER'
+        elementos.append(img_logo)
+
     except:
-        print("⚠️ No se encontró el logo, el PDF se generará sin él.")
+        print("⚠️ No se encontraron los logos, el PDF se generará sin ellos.")
 
     # Espaciado antes del título
-    elementos.append(Spacer(1, 10))
+    elementos.append(Spacer(1, 20))
 
-    # Título centrado con espacio arriba
-    #titulo = [["LISTADO DE EMPLEADOS"]]
+    # Título centrado
     tabla_titulo = Table(titulo, colWidths=[ancho_util])
     tabla_titulo.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('FONTSIZE', (0, 0), (-1, -1), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
     ]))
     elementos.append(tabla_titulo)
 
-    # Nueva versión de cabeceras más cortas
-    #datos = [["Código", "Identif.", "Nombres", "Nacimiento", "Dirección", "Teléfonos", "Email", "Estado"]]
+    # Preparar datos y calcular anchos automáticos
     datos = [encabezado]
     datos.extend(empleados)
+    
+    # Calcular anchos de columna automáticamente
+    anchos_columnas = calcular_ancho_columnas(datos)
 
-    # Distribución del ancho
-    #col_widths = [60, 70, 125, 100, 100, 100, 120, 50]
-    col_widths = anchoColumnas 
-
-    tabla = Table(datos, colWidths=col_widths)
+    # Crear tabla con anchos calculados
+    tabla = Table(datos, colWidths=anchos_columnas)
 
     # Estilos de la tabla
-    tabla.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+    estilo = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4F81BD')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (0, 0), (-1, -1), True),
+    ])
     
+    # Aplicar estilo alternado para filas
+    for i, row in enumerate(datos):
+        if i > 0:
+            bg_color = colors.white if i % 2 == 1 else colors.HexColor('#DCE6F1')
+            estilo.add('BACKGROUND', (0, i), (-1, i), bg_color)
+
+    tabla.setStyle(estilo)
+    
+    # Añadir espacio antes de la tabla
+    elementos.append(Spacer(1, 15))
     elementos.append(tabla)
 
     # Generar el PDF
     doc.build(elementos)
-    print(f"PDF generado correctamente con membrete y logo: {archivo_pdf}")
+    print(f"PDF generado correctamente con columnas autoajustables: {archivo_pdf}")
 
 
 
