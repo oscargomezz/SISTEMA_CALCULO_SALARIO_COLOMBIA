@@ -62,7 +62,7 @@ def actualizar ( encabezado, empleado ):
                 return empleado
             case _:
                 libreria.mensajeErrorEsperaSegundos("OPCIÓN NO VALIDA", 1)    
-    
+                
 
 def insertar ( codigo ):
     libreria.limpiarPantalla()

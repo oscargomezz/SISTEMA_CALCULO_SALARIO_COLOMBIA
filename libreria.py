@@ -6,6 +6,7 @@ from tabulate import tabulate
 from colorama import Fore, Back, Style, init
 import pickle
 from datetime import datetime
+from fpdf import FPDF
 
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Image
@@ -182,7 +183,7 @@ def leerMes(mensaje="Ingrese un mes"):
     }
 
     while True:
-        print(f"{mensaje}: ", end="", flush=True)
+        print(f"{mensaje} ", end="", flush=True)
         valor = input().strip().upper()
 
         # Verificar que no esté vacío ni tenga espacios intermedios
@@ -240,6 +241,26 @@ def menuCrud( titulo ):
     print(tabulate([ 
                      ['*' * (len(titulo) + 6)],
                      ["\t" + Back.YELLOW + "[1]" + Style.RESET_ALL + "  INSERTAR  "],
+                     ["\t" + Back.YELLOW + "[2]" + Style.RESET_ALL + "  LISTAR    "],
+                     ["\t" + Back.YELLOW + "[3]" + Style.RESET_ALL + "  CONSULTAR "],
+                     ["\t" + Back.YELLOW + "[4]" + Style.RESET_ALL + "  ACTUALIZAR"],
+                     ["\t" + Back.YELLOW + "[5]" + Style.RESET_ALL + "  ELIMINAR  "],
+                     ["\t" + Back.YELLOW + "[6]" + Style.RESET_ALL + "  SALIR     "]
+                     ],
+                     tablefmt='fancy_grid',
+                     stralign='left'))
+
+#-----------------------------------------------------------#
+#Función con las opciones del CRUD para PAGOS   #
+#-----------------------------------------------------------#
+def menuCrudPagos( titulo ): 
+    limpiarPantalla()    #os.system('cls')
+    print(tabulate([['' + Fore.GREEN + "SISTEMA CALCULO SALARIO COLOMBIA \n" + Style.RESET_ALL + '' + Fore.LIGHTYELLOW_EX + "MENU: " + titulo + '' + Style.RESET_ALL + ''],],
+                     tablefmt='fancy_grid',
+                     stralign='center'))
+    print(tabulate([ 
+                     ['*' * (len(titulo) + 6)],
+                     ["\t" + Back.YELLOW + "[1]" + Style.RESET_ALL + "  PAGAR NOMINA COMPLETA  "],
                      ["\t" + Back.YELLOW + "[2]" + Style.RESET_ALL + "  LISTAR    "],
                      ["\t" + Back.YELLOW + "[3]" + Style.RESET_ALL + "  CONSULTAR "],
                      ["\t" + Back.YELLOW + "[4]" + Style.RESET_ALL + "  ACTUALIZAR"],
@@ -348,16 +369,16 @@ def cargar(lista, filename):
 #GENERA Y ABRE LOS PDF GENERADOS
 
 
-def abrirPDF( archivo_pdf):
-    #directorio = "reportesPDF"
-    #archivo_pdf = os.path.join(directorio, "empleados.pdf") 
+def abrirPDF(archivo_pdf):
     try:
+        ruta_absoluta = os.path.abspath(archivo_pdf)  # ✅ convierte a ruta absoluta
+
         if sys.platform == "win32":  # Windows
-            os.startfile(archivo_pdf)
+            os.startfile(ruta_absoluta)
         elif sys.platform == "darwin":  # macOS
-            os.system(f"open {archivo_pdf}")
+            os.system(f"open \"{ruta_absoluta}\"")
         elif sys.platform.startswith("linux"):  # Linux
-            os.system(f"xdg-open {archivo_pdf}")
+            os.system(f"xdg-open \"{ruta_absoluta}\"")
         else:
             print("⚠ No se pudo abrir el PDF automáticamente.")
     except Exception as e:
@@ -366,6 +387,9 @@ def abrirPDF( archivo_pdf):
 
 # Función para generar PDF con logo y tabla ajustada
 def generarPDF(encabezado, empleados, archivo_pdf, titulo, logo):
+    # Crear el directorio si no existe
+    os.makedirs(os.path.dirname(archivo_pdf), exist_ok=True)
+
     # Configuración de márgenes amplios
     margen = 40
     extra_margen_visual = 15
@@ -528,3 +552,43 @@ def Calcular_salario_neto(Salario_devengado, Auxilio_transporte, Descuento_salud
     return Salario_neto
 
 ############################################################################
+
+
+############################################################################
+#FUNCIONES PARA SABER SI YA HAY PAGOS REGISTRADOS
+############################################################################
+
+def existePagoRegistrado(pagos, empleado, mes, año):
+    """
+    Verifica si el empleado ya tiene un pago registrado en el mes y año dados.
+
+    Parámetros:
+    - pagos: Lista de pagos registrados.
+    - empleado: Lista que representa un empleado.
+    - mes: Mes a verificar.
+    - año: Año a verificar.
+
+    Retorna:
+    - True si ya existe el pago, False en caso contrario.
+    """
+    codigo_empleado = empleado[0]  # Suponiendo que la posición 0 es el código del empleado
+    return any(p[0] == codigo_empleado and p[3] == mes and p[4] == año for p in pagos)
+    #return any(p[1] == empleado[1] and p[3] == mes and p[4] == año for p in pagos)
+
+
+############################################################################
+#MOSTRAR VARIOS REGISTROS CON UN SOLO ENCABEZADO 
+############################################################################
+
+def mostrar_varios(encabezado, lista_de_listas): 
+    # Asegurarse de que se trata de una lista de listas
+    if not lista_de_listas:
+        print("No hay registros para mostrar.")
+        return
+
+    # Colorear encabezados
+    encabezado_coloreado = [f"{Fore.GREEN}{Style.BRIGHT}{col}{Style.RESET_ALL}" for col in encabezado]
+    
+    # Mostrar todos los registros con formato de tabla
+    print(tabulate(lista_de_listas, headers=encabezado_coloreado, tablefmt='fancy_grid', stralign='left', floatfmt=",.0f"))
+

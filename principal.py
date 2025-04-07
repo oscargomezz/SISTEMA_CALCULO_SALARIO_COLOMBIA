@@ -47,8 +47,7 @@ def main():
                 importlib.reload(P)
                 R.menu()
             case '4':
-                print("llamar a parámetros")
-                input()
+                libreria.mensajeEsperaSegundos("Sección en construcción 🚷...Gracias por su comprensión 🙏 Vuelva pronto!", 4)
             case '5':
                 libreria.mensajeEsperaSegundos("GRACIAS POR UTILIZAR NUESTRO PROGRAMA, HASTA PRONTO! 😎", 4)
                 libreria.limpiarPantalla()
